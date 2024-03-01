@@ -1,8 +1,9 @@
 """
 Platformer Game - ADD COMMENTS AND DOCSTRINGS, ENSURE LINE LENGTH < 80
 """
-# Imports arcade library
+# Imports
 import arcade
+import os
 
 # Constants for the game window
 SCREEN_WIDTH = 640
@@ -10,7 +11,7 @@ SCREEN_HEIGHT = 480
 SCREEN_TITLE = "Sam's Platformer"
 
 # Constants to scale sprites
-CHARACTER_SCALING = 1
+CHARACTER_SCALING = 0.8
 TILE_SCALING = 0.5
 COIN_SCALING = 0.5
 
@@ -18,6 +19,8 @@ COIN_SCALING = 0.5
 PLAYER_MOVEMENT_SPEED = 5
 PLAYER_JUMP_SPEED = 20
 GRAVITY = 1
+
+MAIN_PATH = os.path.dirname(os.path.abspath(__file__))
 
 class MyGame(arcade.Window):
     """
@@ -29,13 +32,14 @@ class MyGame(arcade.Window):
         # Inherit methods from arcade parent class (Window)
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
 
-        # Initialise instance variables (best practice)
+        # Initialise instance variables
         self.scene = None
         self.player_sprite = None
         self.physics_engine = None
         self.camera = None
         self.gui_camera = None
         self.score = 0
+        self.tile_map = None
 
         # Instance variables for sound effects
         self.collect_coin_sound = arcade.load_sound(":resources:sounds/coin1.wav")
@@ -49,8 +53,19 @@ class MyGame(arcade.Window):
         Set up the game here. Call this method to restart the game.
         """
 
-        # Create instance of the 'Scene' class, saved within the 'scene' variable
-        self.scene = arcade.Scene()
+        # Dictionary to specify options for individual layers e.g. spatial hash for the platforms SpriteList
+        layer_options = {
+            "Platforms": {"use_spatial_hash": True,}
+        }
+
+        map_name = f"{MAIN_PATH}/first_map.tmx"
+
+        # Loads tile map in to tile_map variable
+        self.tile_map = arcade.load_tilemap(map_name, TILE_SCALING, layer_options)
+
+        # Initialize Scene with our TileMap, this will automatically add all layers
+        # from the map as SpriteLists in the scene in the proper order
+        self.scene = arcade.Scene.from_tilemap(self.tile_map)
 
         # Create SpriteList for wall sprites - spatial hashing improves collision detection for stationary sprites
         self.scene.add_sprite_list("Walls", use_spatial_hash=True)
@@ -64,6 +79,9 @@ class MyGame(arcade.Window):
         # Add player sprite to "Player" sprite list
         self.scene.add_sprite("Player", self.player_sprite)
 
+        # Sets the foreground layer to be rendered behind the player sprite
+        self.scene.add_sprite_list_before("Player", "Foreground")
+
         # Create 'camera' variable as an instance of arcade's 'Camera' class - main camera
         self.camera = arcade.Camera(self.width, self.height)
 
@@ -73,38 +91,14 @@ class MyGame(arcade.Window):
         # Resets 'score' variable
         self.score = 0
 
-        # Loop adds grass textured wall sprites at equal intervals (64 pixels) to form the floor
-        for x in range(0, 1314, 64):
-            wall = arcade.Sprite(":resources:images/tiles/grassMid.png", TILE_SCALING)
-            wall.center_x = x
-            wall.center_y = 32
-            self.scene.add_sprite("Walls", wall)
+        # Set the background color of the specific tile map - overrides window background colour
+        if self.tile_map.background_color:
+            arcade.set_background_color(self.tile_map.background_color)
 
-        # Loop adds coin sprites at equal intervals (256 pixels) above the floor
-        for x in range(128, 1250, 256):
-            coin = arcade.Sprite(":resources:images/items/coinGold.png", COIN_SCALING)
-            coin.center_x = x
-            coin.center_y = 96
-            self.scene.add_sprite("Coins", coin)
-
-        # Loop adds crate textured wall sprites at equal intervals (64 pixels) to form the left wall
-        for y in range(96, 416, 64):
-            wall = arcade.Sprite(":resources:images/tiles/boxCrate_double.png", TILE_SCALING)
-            wall.center_x = 32
-            wall.center_y = y
-            self.scene.add_sprite("Walls", wall)
-
-        # List pixel coordinates for crate textured wall sprite placement - (0,0) is bottom left of window
-        coordinate_list = [[256, 96], [768, 96], [576, 224], [640, 224], [704, 224], [768, 224], [960, 416], [1152, 608], [1344, 800], [1536, 992]]
-
-        # Iterate through coordinate_list and add wall sprites at the specified positions
-        for coordinate in coordinate_list:
-            wall = arcade.Sprite(":resources:images/tiles/boxCrate_double.png", TILE_SCALING)
-            wall.position = coordinate
-            self.scene.add_sprite("Walls", wall)
-
-        # Create the physics engine, passing in the player sprite, gravity constant, and list of wall sprites
-        self.physics_engine = arcade.PhysicsEnginePlatformer(self.player_sprite, gravity_constant=GRAVITY, walls=self.scene["Walls"])
+        # Create the 'physics engine' passing in the player sprite, gravity constant, and Platforms layer of the tile map
+        self.physics_engine = arcade.PhysicsEnginePlatformer(
+            self.player_sprite, gravity_constant=GRAVITY, walls=self.scene["Platforms"]
+        )
 
     def center_camera_to_player(self):
         """ADD COMMENTS AND DOCSTRINGS FROM HERE"""
