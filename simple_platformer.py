@@ -40,6 +40,7 @@ class MyGame(arcade.Window):
         self.gui_camera = None
         self.score = 0
         self.tile_map = None
+        self.level = 1
 
         # Instance variables for sound effects
         self.collect_coin_sound = arcade.load_sound(":resources:sounds/coin1.wav")
@@ -58,7 +59,7 @@ class MyGame(arcade.Window):
             "Platforms": {"use_spatial_hash": True,}
         }
 
-        map_name = f"{MAIN_PATH}/first_map.tmx"
+        map_name = f"{MAIN_PATH}/map_level_{self.level}.tmx"
 
         # Loads tile map in to tile_map variable
         self.tile_map = arcade.load_tilemap(map_name, TILE_SCALING, layer_options)
@@ -125,7 +126,7 @@ class MyGame(arcade.Window):
 
         self.gui_camera.use()
 
-        score_text = f"Score: {self.score}"
+        score_text = f"Diamonds Collected: {self.score}/3"
         arcade.draw_text(score_text, 10, 10, arcade.csscolor.WHITE, 18)
 
     def on_key_press(self, key, modifiers):
@@ -169,6 +170,11 @@ class MyGame(arcade.Window):
             coin.remove_from_sprite_lists()
             arcade.play_sound(self.collect_coin_sound)
             self.score += 1
+
+        if self.score == 3:
+            self.level += 1
+            self.reset_score = True
+            self.setup()
 
 def main():
     """Main function"""
