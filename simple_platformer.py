@@ -9,6 +9,7 @@ import os
 SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 480
 SCREEN_TITLE = "Sam's Platformer"
+WINDOW_COLOUR = "IVORY"
 
 # Constants to scale sprites
 CHARACTER_SCALING = 0.8
@@ -21,6 +22,15 @@ PLAYER_JUMP_SPEED = 20
 GRAVITY = 1
 
 MAIN_PATH = os.path.dirname(os.path.abspath(__file__))
+
+# Layer Names from our TileMap
+LAYER_NAME_FOREGROUND = "Foreground"
+LAYER_NAME_MOVING_PLATFORMS = "Moving Platforms"
+LAYER_NAME_PLATFORMS = "Platforms"
+LAYER_NAME_COINS = "Coins"
+LAYER_NAME_BACKGROUND = "Background"
+LAYER_NAME_LADDERS = "Ladders"
+LAYER_NAME_DANGERS = "Dangers"
 
 class MyGame(arcade.Window):
     """
@@ -47,7 +57,8 @@ class MyGame(arcade.Window):
         self.jump_sound = arcade.load_sound(":resources:sounds/jump1.wav")
 
         # Set background for the game window using arcade's built-in colours
-        arcade.set_background_color(arcade.csscolor.INDIGO)
+        background_colour = f"arcade.csscolor.{WINDOW_COLOUR}"
+        arcade.set_background_color(background_colour)
 
     def setup(self):
         """
@@ -110,6 +121,8 @@ class MyGame(arcade.Window):
         # Don't let camera travel past 0
         if screen_center_x < 0:
             screen_center_x = 0
+        if screen_center_x > 1280:
+            screen_center_x = 1280
         if screen_center_y < 0:
             screen_center_y = 0
             
