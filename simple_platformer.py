@@ -1,5 +1,5 @@
 """
-Platformer Game - ADD COMMENTS AND DOCSTRINGS, ENSURE LINE LENGTH < 80
+Platformer Game
 """
 # Imports
 import arcade
@@ -9,7 +9,7 @@ import os
 SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 480
 SCREEN_TITLE = "Sam's Platformer"
-WINDOW_COLOUR = "IVORY"
+WINDOW_COLOUR = arcade.csscolor.IVORY
 
 # Constants to scale sprites
 CHARACTER_SCALING = 0.8
@@ -58,8 +58,7 @@ class MyGame(arcade.Window):
         self.jump_sound = arcade.load_sound(":resources:sounds/jump1.wav")
 
         # Set background for the game window using arcade's built-in colours
-        background_colour = f"arcade.csscolor.{WINDOW_COLOUR}"
-        arcade.set_background_color(background_colour)
+        arcade.set_background_color(WINDOW_COLOUR)
 
     def setup(self):
         """
