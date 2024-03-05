@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="128" tileheight="128" infinite="0" nextlayerid="8" nextobjectid="2">
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="128" tileheight="128" infinite="0" nextlayerid="8" nextobjectid="2">
  <editorsettings>
   <export target="first_map.json" format="json"/>
  </editorsettings>
@@ -76,15 +76,6 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
- <objectgroup id="7" name="Moving Platforms">
-  <object id="1" gid="27" x="1017.94" y="1413.75" width="128" height="128">
-   <properties>
-    <property name="boundary_bottom" value="1344.0"/>
-    <property name="boundary_top" value="448.0"/>
-    <property name="change_y" value="1.0"/>
-   </properties>
-  </object>
- </objectgroup>
  <layer id="1" name="Platforms" width="30" height="20">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,40,40,83,83,40,40,40,40,40,40,40,40,
