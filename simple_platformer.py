@@ -26,6 +26,7 @@ PLAYER_SPAWN_Y = 128
 # Layer Names from our TileMap
 LAYER_NAME_FOREGROUND = "Foreground"
 LAYER_NAME_PLATFORMS = "Platforms"
+LAYER_NAME_MOVING_PLATFORMS = "Moving Platforms"
 LAYER_NAME_COINS = "Coins"
 LAYER_NAME_BACKGROUND = "Background"
 LAYER_NAME_LADDERS = "Ladders"
@@ -67,7 +68,10 @@ class MyGame(arcade.Window):
 
         # Dictionary to specify options for individual layers e.g. spatial hash for the platforms SpriteList
         layer_options = {
-            "Platforms": {"use_spatial_hash": True,}
+            LAYER_NAME_PLATFORMS: {"use_spatial_hash": True,},
+            LAYER_NAME_MOVING_PLATFORMS: {"use_spatial_hash": True,},
+            LAYER_NAME_LADDERS: {"use_spatial_hash": True,},
+            LAYER_NAME_COINS: {"use_spatial_hash": True,}
         }
 
         # Sets map file name based on current level
@@ -107,7 +111,8 @@ class MyGame(arcade.Window):
 
         # Create the physics engine, passing in the player sprite, gravity constant, and Platforms layer of the tile map
         self.physics_engine = arcade.PhysicsEnginePlatformer(
-            self.player_sprite, gravity_constant=GRAVITY, walls=self.scene["Platforms"]
+            self.player_sprite, gravity_constant=GRAVITY, walls=self.scene[LAYER_NAME_PLATFORMS],
+            platforms=self.scene[LAYER_NAME_MOVING_PLATFORMS], ladders=self.scene[LAYER_NAME_LADDERS]
         )
 
     def center_camera_to_player(self):
@@ -153,9 +158,14 @@ class MyGame(arcade.Window):
         """Called whenever a key is pressed."""
 
         if key == arcade.key.UP or key == arcade.key.W:
-            if self.physics_engine.can_jump():
+            if self.physics_engine.is_on_ladder():
+                self.player_sprite.change_y = PLAYER_MOVEMENT_SPEED
+            elif self.physics_engine.can_jump():
                 self.player_sprite.change_y = PLAYER_JUMP_SPEED
                 arcade.play_sound(self.jump_sound)
+        elif key == arcade.key.DOWN or key == arcade.key.S:
+            if self.physics_engine.is_on_ladder():
+                self.player_sprite.change_y = -PLAYER_MOVEMENT_SPEED
         elif key == arcade.key.LEFT or key == arcade.key.A:
             self.player_sprite.change_x = -PLAYER_MOVEMENT_SPEED
         elif key == arcade.key.RIGHT or key == arcade.key.D:
@@ -180,6 +190,9 @@ class MyGame(arcade.Window):
 
         # Calls center_camera_to_player method to keep the player centered on screen
         self.center_camera_to_player()
+
+        # Update walls, used with moving platforms
+        self.scene.update([LAYER_NAME_MOVING_PLATFORMS])
 
         # If player sprite falls below map, respawn at spawn point
         if self.player_sprite.center_y < 0:
