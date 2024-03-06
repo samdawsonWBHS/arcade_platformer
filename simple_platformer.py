@@ -171,6 +171,9 @@ class MyGame(arcade.Window):
         elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
 
+        if key == arcade.key.SPACE:
+            self.score = 3
+
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key."""
 
