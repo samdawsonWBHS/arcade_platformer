@@ -3,7 +3,10 @@ Platformer Game
 """
 # Imports
 import arcade
+from arcade.experimental.lights import Light, LightLayer
 import os
+
+AMBIENT_COLOR = (10, 10, 10)
 
 # Constants for the game window
 SCREEN_WIDTH = 640
@@ -175,6 +178,11 @@ class MyGame(arcade.Window):
         # Set background for the game window using arcade's built-in colours
         arcade.set_background_color(WINDOW_COLOUR)
 
+        # List of all the lights
+        self.light_layer = None
+        # Individual light we move with player, and turn on/off
+        self.player_light = None
+
     def setup(self):
         """
         Set up the game here. Call this method to restart the game.
@@ -229,6 +237,22 @@ class MyGame(arcade.Window):
             platforms=self.scene[LAYER_NAME_MOVING_PLATFORMS], ladders=self.scene[LAYER_NAME_LADDERS]
         )
 
+        # Create a light layer, used to render things to, then post-process and
+        # add lights. This must match the screen size.
+        self.light_layer = LightLayer(SCREEN_WIDTH, SCREEN_HEIGHT)
+        # We can also set the background color that will be lit by lights,
+        # but in this instance we just want a black background
+        self.light_layer.set_background_color(arcade.color.BLACK)
+
+        # Create a light to follow the player around.
+        # We'll position it later, when the player moves.
+        # We'll only add it to the light layer when the player turns the light
+        # on. We start with the light off.
+        radius = 150
+        mode = 'soft'
+        color = arcade.csscolor.WHITE
+        self.player_light = Light(0, 0, radius, color, mode)
+
     def center_camera_to_player(self):
         """
         Update every frame to relocate camera to player.
@@ -258,15 +282,29 @@ class MyGame(arcade.Window):
 
         # Clears current frame, initialises camera for use, then renders spritelists
         self.clear()
+
         self.camera.use()
-        self.scene.draw()
+
+        # Everything that should be affected by lights gets rendered inside this
+        # 'with' statement. Nothing is rendered to the screen yet, just the light
+        # layer.
+        with self.light_layer:
+            self.scene.draw()
 
         # Initialises gui_camera for use to draw the score
         self.gui_camera.use()
 
+        # Draw the light layer to the screen.
+        # This fills the entire screen with the lit version
+        # of what we drew into the light layer above.
+        self.light_layer.draw(ambient_color=AMBIENT_COLOR)
+
         # Draws current score (number of diamonds collected in level)
         score_text = f"Diamonds Collected: {self.score}/3"
         arcade.draw_text(score_text, 10, 10, arcade.csscolor.WHITE, 18)
+
+        arcade.draw_text("Press SPACE to turn character light on/off.",
+                         10, 100, arcade.color.WHITE, 18)
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed."""
@@ -284,8 +322,16 @@ class MyGame(arcade.Window):
             self.player_sprite.change_x = -PLAYER_MOVEMENT_SPEED
         elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
+        elif key == arcade.key.SPACE:
+            # --- Light related ---
+            # We can add/remove lights from the light layer. If they aren't
+            # in the light layer, the light is off.
+            if self.player_light in self.light_layer:
+                self.light_layer.remove(self.player_light)
+            else:
+                self.light_layer.add(self.player_light)
 
-        if key == arcade.key.SPACE:
+        if key == arcade.key.MOD_SHIFT:
             self.score = 3
 
     def on_key_release(self, key, modifiers):
@@ -309,9 +355,7 @@ class MyGame(arcade.Window):
         self.center_camera_to_player()
 
         # Update Animations
-        self.scene.update_animation(
-            delta_time, [LAYER_NAME_COINS, LAYER_NAME_BACKGROUND, self.player_sprite]
-        )
+        self.scene.update_animation(delta_time, self.player_sprite)
 
         # Update walls, used with moving platforms
         self.scene.update([LAYER_NAME_MOVING_PLATFORMS])
@@ -334,6 +378,11 @@ class MyGame(arcade.Window):
             self.level += 1
             self.reset_score = True
             self.setup()
+
+        # --- Light related ---
+        # We can easily move the light by setting the position,
+        # or by center_x, center_y.
+        self.player_light.position = self.player_sprite.position
 
 def main():
     """Main function"""
