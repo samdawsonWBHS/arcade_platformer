@@ -1,6 +1,7 @@
 """
 Platformer Game
 """
+
 # Imports
 import arcade
 from arcade.experimental.lights import Light, LightLayer
@@ -74,7 +75,7 @@ class PlayerCharacter(arcade.Sprite):
         # --- Load Textures ---
 
         # Images from Kenney.nl's Asset Pack 3
-        main_path = ":resources:images/animated_characters/male_person/malePerson"
+        main_path = ":resources:images/animated_characters/male_adventurer/maleAdventurer"
 
         # Load textures for idle standing
         self.idle_texture_pair = load_texture_pair(f"{main_path}_idle.png")
@@ -89,10 +90,9 @@ class PlayerCharacter(arcade.Sprite):
 
         # Load textures for climbing
         self.climbing_textures = []
-        texture = arcade.load_texture(f"{main_path}_climb0.png")
-        self.climbing_textures.append(texture)
-        texture = arcade.load_texture(f"{main_path}_climb1.png")
-        self.climbing_textures.append(texture)
+        for i in range(2):
+            texture = arcade.load_texture(f"{main_path}_climb{i}.png")
+            self.climbing_textures.append(texture)
 
         # Set the initial texture
         self.texture = self.idle_texture_pair[0]
@@ -206,13 +206,9 @@ class MyGame(arcade.Window):
         # from the map as SpriteLists in the scene in the proper order
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
 
-        # Create player_sprite as an instance of arcade's 'Sprite' class
-        self.player_sprite = arcade.Sprite(":resources:images/animated_characters/male_adventurer/maleAdventurer_idle.png", CHARACTER_SCALING)
-
-        # Set spawn point for player
+        # Set up the player, specifically placing it at these coordinates.
+        self.player_sprite = PlayerCharacter()
         self.player_sprite.position = PLAYER_SPAWN_X, PLAYER_SPAWN_Y
-
-        # Add player sprite to "Player" sprite list
         self.scene.add_sprite(LAYER_NAME_PLAYER, self.player_sprite)
 
         # Sets the foreground layer to be rendered behind the player sprite
@@ -303,24 +299,56 @@ class MyGame(arcade.Window):
         score_text = f"Diamonds Collected: {self.score}/3"
         arcade.draw_text(score_text, 10, 10, arcade.csscolor.WHITE, 18)
 
+<<<<<<< HEAD
         arcade.draw_text("Press SPACE to turn character light on/off.",
                          10, 100, arcade.color.WHITE, 18)
+=======
+    def process_keychange(self):
+        """
+        Called when we change a key up/down or we move on/off a ladder.
+        """
+        # Process up/down
+        if self.up_pressed and not self.down_pressed:
+            if self.physics_engine.is_on_ladder():
+                self.player_sprite.change_y = PLAYER_MOVEMENT_SPEED
+            elif (
+                self.physics_engine.can_jump(y_distance=10)
+                and not self.jump_needs_reset
+            ):
+                self.player_sprite.change_y = PLAYER_JUMP_SPEED
+                self.jump_needs_reset = True
+                arcade.play_sound(self.jump_sound)
+        elif self.down_pressed and not self.up_pressed:
+            if self.physics_engine.is_on_ladder():
+                self.player_sprite.change_y = -PLAYER_MOVEMENT_SPEED
+
+        # Process up/down when on a ladder and no movement
+        if self.physics_engine.is_on_ladder():
+            if not self.up_pressed and not self.down_pressed:
+                self.player_sprite.change_y = 0
+            elif self.up_pressed and self.down_pressed:
+                self.player_sprite.change_y = 0
+
+        # Process left/right
+        if self.right_pressed and not self.left_pressed:
+            self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
+        elif self.left_pressed and not self.right_pressed:
+            self.player_sprite.change_x = -PLAYER_MOVEMENT_SPEED
+        else:
+            self.player_sprite.change_x = 0
+>>>>>>> 039a7a3a16c27e3e375c26b2abd050f53faf7d7c
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed."""
 
         if key == arcade.key.UP or key == arcade.key.W:
-            if self.physics_engine.is_on_ladder():
-                self.player_sprite.change_y = PLAYER_MOVEMENT_SPEED
-            elif self.physics_engine.can_jump():
-                self.player_sprite.change_y = PLAYER_JUMP_SPEED
-                arcade.play_sound(self.jump_sound)
+            self.up_pressed = True
         elif key == arcade.key.DOWN or key == arcade.key.S:
-            if self.physics_engine.is_on_ladder():
-                self.player_sprite.change_y = -PLAYER_MOVEMENT_SPEED
+            self.down_pressed = True
         elif key == arcade.key.LEFT or key == arcade.key.A:
-            self.player_sprite.change_x = -PLAYER_MOVEMENT_SPEED
+            self.left_pressed = True
         elif key == arcade.key.RIGHT or key == arcade.key.D:
+<<<<<<< HEAD
             self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
         elif key == arcade.key.SPACE:
             # --- Light related ---
@@ -330,20 +358,29 @@ class MyGame(arcade.Window):
                 self.light_layer.remove(self.player_light)
             else:
                 self.light_layer.add(self.player_light)
+=======
+            self.right_pressed = True
+>>>>>>> 039a7a3a16c27e3e375c26b2abd050f53faf7d7c
 
         if key == arcade.key.MOD_SHIFT:
             self.score = 3
+
+        self.process_keychange()
 
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key."""
 
         if key == arcade.key.UP or key == arcade.key.W:
-            if self.physics_engine.can_jump():
-                self.player_sprite.change_y = 0
+            self.up_pressed = False
+            self.jump_needs_reset = False
+        elif key == arcade.key.DOWN or key == arcade.key.S:
+            self.down_pressed = False
         elif key == arcade.key.LEFT or key == arcade.key.A:
-            self.player_sprite.change_x = 0
+            self.left_pressed = False
         elif key == arcade.key.RIGHT or key == arcade.key.D:
-            self.player_sprite.change_x = 0
+            self.right_pressed = False
+
+        self.process_keychange()
 
     def on_update(self, delta_time):
         """Movement and game logic - running constantly"""
@@ -354,8 +391,26 @@ class MyGame(arcade.Window):
         # Calls center_camera_to_player method to keep the player centered on screen
         self.center_camera_to_player()
 
+<<<<<<< HEAD
         # Update Animations
         self.scene.update_animation(delta_time, self.player_sprite)
+=======
+        # Update animations
+        if self.physics_engine.can_jump():
+            self.player_sprite.can_jump = False
+        else:
+            self.player_sprite.can_jump = True
+
+        if self.physics_engine.is_on_ladder() and not self.physics_engine.can_jump():
+            self.player_sprite.is_on_ladder = True
+            self.process_keychange()
+        else:
+            self.player_sprite.is_on_ladder = False
+            self.process_keychange()
+
+        # Update player_sprite animations
+        self.player_sprite.update_animation(delta_time)
+>>>>>>> 039a7a3a16c27e3e375c26b2abd050f53faf7d7c
 
         # Update walls, used with moving platforms
         self.scene.update([LAYER_NAME_MOVING_PLATFORMS])
